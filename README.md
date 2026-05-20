@@ -27,3 +27,25 @@ A simple banking application built with **Spring Boot**, designed to manage user
 - `dto/` → request/response models
 - `exception/` → custom exceptions + global handler
 
+## 📡 Main API Endpoints
+
+### User
+- `POST /users` — create a new user  
+- `GET /users/{id}` — get user details  
+
+### Account
+- `POST /accounts` — create a new account  
+- `GET /accounts/{id}` — get account details  
+
+### Transaction
+- `POST /transactions/deposit`  
+- `POST /transactions/withdraw`  
+- `POST /transactions/transfer`  
+
+## 🛠️ Roadmap
+- Add JWT authentication
+- Add user roles (admin/user)
+- Improve automated tests
+
+## 👤 Author
+Francesco Salentino — personal backend practice project.
