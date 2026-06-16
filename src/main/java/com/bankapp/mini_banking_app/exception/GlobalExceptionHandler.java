@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
@@ -64,4 +64,17 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request));
     }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleBadJson(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        return ResponseEntity
+                .badRequest()
+                .body(build(HttpStatus.BAD_REQUEST,
+                        "Invalid transaction type",
+                        request));
+    }
+
 }
