@@ -18,16 +18,9 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    // =========================
-    // DEV LOGIN EASY
-    // =========================
-    @PostMapping("/login-dev")
-    public String loginDev(@RequestParam String username) {
-        return jwtService.generateToken(username);
-    }
 
     // =========================
-    // MID LOGIN (real)
+    // LOGIN (real)
     // =========================
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
@@ -36,10 +29,9 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(
                         request.username(),
                         request.password()
-                )
-        );
+        ));
 
-        String token = jwtService.generateToken(request.username());
+        String token = jwtService.generateToken(authentication.getName());
 
         return ResponseEntity.ok(new AuthResponse(token));
     }
