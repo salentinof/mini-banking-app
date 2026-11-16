@@ -4,6 +4,7 @@ import com.bankapp.mini_banking_app.dto.request.AccountRequest;
 import com.bankapp.mini_banking_app.entity.Account;
 import com.bankapp.mini_banking_app.entity.User;
 import com.bankapp.mini_banking_app.exception.AccountNotFoundException;
+import com.bankapp.mini_banking_app.exception.UserNotFoundException;
 import com.bankapp.mini_banking_app.repository.AccountRepository;
 import com.bankapp.mini_banking_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class AccountService {
     public Account createAccount(AccountRequest request) {
 
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(()-> new RuntimeException("user not found"));
+                .orElseThrow(()-> new UserNotFoundException(request.getUserId()));
 
         Account account = new Account();
         account.setAccountNumber("ACC-" + System.currentTimeMillis());
