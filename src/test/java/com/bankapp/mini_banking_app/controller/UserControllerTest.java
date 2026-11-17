@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
@@ -27,10 +27,10 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserService service;
 
-    @MockBean
+    @MockitoBean
     private UserMapper mapper;
 
     // ============================
@@ -38,7 +38,7 @@ class UserControllerTest {
     // ============================
     @Test
     void createUser_success() throws Exception {
-        User saved = user(1L, "Francesco", "fra@mail.com");
+        User saved = user(1L, "Francesco", "fra@mail.com", "1234");
         UserResponse resp = new UserResponse(1L, "Francesco", "fra@mail.com", List.of());
 
         when(service.createUser(any())).thenReturn(saved);
@@ -62,7 +62,7 @@ class UserControllerTest {
     // ============================
     @Test
     void getUser_success() throws Exception {
-        User u = user(1L, "Andrea", "andrea@mail.com");
+        User u = user(1L, "Andrea", "andrea@mail.com","1234");
         UserResponse resp = new UserResponse(1L, "Andrea", "andrea@mail.com", List.of("ACC1"));
 
         when(service.getUser(1L)).thenReturn(u);
@@ -81,8 +81,8 @@ class UserControllerTest {
     // ============================
     @Test
     void getAllUser_success() throws Exception {
-        User u1 = user(1L, "Francesco", "fra@mail.com");
-        User u2 = user(2L, "Giovanni", "gio@mail.com");
+        User u1 = user(1L, "Francesco", "fra@mail.com","1234");
+        User u2 = user(2L, "Giovanni", "gio@mail.com","1234");
 
         UserResponse r1 = new UserResponse(1L, "Francesco", "fra@mail.com", List.of("ACC1"));
         UserResponse r2 = new UserResponse(2L, "Giovanni", "gio@mail.com", List.of("ACC2"));
@@ -105,11 +105,12 @@ class UserControllerTest {
     // ============================
     // HELPERS
     // ============================
-    private User user(Long id, String name, String email) {
+    private User user(Long id, String name, String email, String password) {
         User u = new User();
         u.setId(id);
         u.setName(name);
         u.setEmail(email);
+        u.setPassword(password);
         return u;
     }
 }
