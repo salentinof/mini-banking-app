@@ -2,11 +2,12 @@ package com.bankapp.mini_banking_app.service;
 
 import com.bankapp.mini_banking_app.dto.request.UserRequest;
 import com.bankapp.mini_banking_app.entity.User;
+import com.bankapp.mini_banking_app.exception.UserNotFoundException;
 import com.bankapp.mini_banking_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Log4j2
@@ -15,12 +16,13 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
     public User createUser(UserRequest request){
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         user = repository.save(user);
 
@@ -31,7 +33,7 @@ public class UserService {
 
     public User getUser(Long idUser) {
         return repository.findById(idUser)
-                .orElseThrow(()-> new RuntimeException("User not found"));
+                .orElseThrow(()-> new UserNotFoundException(idUser));
     }
 
     public List<User> getAllUser(){

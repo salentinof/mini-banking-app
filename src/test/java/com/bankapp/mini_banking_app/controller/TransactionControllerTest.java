@@ -12,11 +12,11 @@ import com.bankapp.mini_banking_app.exception.SameAccountTransferException;
 import com.bankapp.mini_banking_app.mapper.TransactionMapper;
 import com.bankapp.mini_banking_app.service.TransactionService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,10 +34,10 @@ class TransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private TransactionService service;
 
-    @MockBean
+    @MockitoBean
     private TransactionMapper mapper;
 
     // ============================
@@ -60,7 +60,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
                         post("/transactions")
-                                .contentType(MediaType.APPLICATION_JSON.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
                                   "type": "DEPOSIT",
@@ -86,7 +86,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
                         post("/transactions")
-                                .contentType(MediaType.APPLICATION_JSON.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
                                   "type": "DEPOSIT",
@@ -111,7 +111,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
                         post("/transactions")
-                                .contentType(MediaType.APPLICATION_JSON.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
                                   "type": "WITHDRAW",
@@ -135,11 +135,11 @@ class TransactionControllerTest {
 
         mockMvc.perform(
                         post("/transactions")
-                                .contentType(MediaType.APPLICATION_JSON.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
                                   "type": "TRANSFER",
-                                  "accountNumber": "ACC1"
+                                  "accountNumber": "ACC1",
                                   "fromAccount": "ACC1",
                                   "toAccount": "ACC1",
                                   "amount": 20
@@ -161,7 +161,7 @@ class TransactionControllerTest {
 
         mockMvc.perform(
                         post("/transactions")
-                                .contentType(MediaType.APPLICATION_JSON.toString())
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                 {
                                   "type": "INVALID",
