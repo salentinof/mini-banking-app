@@ -38,7 +38,7 @@ class UserServiceTest {
     }
 
     @Test
-    void getUser_shouldThrowException_whenNotFound() {
+    void getUser_shouldThrow_whenNotFound() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class,

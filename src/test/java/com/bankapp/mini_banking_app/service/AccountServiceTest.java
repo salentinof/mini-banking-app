@@ -34,7 +34,7 @@ class AccountServiceTest {
     private AccountService service;
 
     @Test
-    void createAccount_shouldCreateAccountForExistingUser() {
+    void createAccount_shouldCreateAccount_whenUserExists() {
         AccountRequest request = new AccountRequest();
         request.setUserId(1L);
 

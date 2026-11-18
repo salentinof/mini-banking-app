@@ -37,7 +37,7 @@ class UserControllerTest {
     // POST /users - SUCCESS
     // ============================
     @Test
-    void createUser_success() throws Exception {
+    void createUser_shouldReturn201_whenRequestIsValid() throws Exception {
         User saved = user(1L, "Francesco", "fra@mail.com", "1234");
         UserResponse resp = new UserResponse(1L, "Francesco", "fra@mail.com", List.of());
 
@@ -48,7 +48,7 @@ class UserControllerTest {
                         post("/users")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
-                                {"name":"Francesco","email":"fra@mail.com"}
+                                {"name":"Francesco","email":"fra@mail.com","password":"1234"}
                                 """)
                 )
                 .andExpect(status().isCreated())
@@ -61,7 +61,7 @@ class UserControllerTest {
     // GET /users/{id} - SUCCESS
     // ============================
     @Test
-    void getUser_success() throws Exception {
+    void getUser_shouldReturn200_whenUserExists() throws Exception {
         User u = user(1L, "Andrea", "andrea@mail.com","1234");
         UserResponse resp = new UserResponse(1L, "Andrea", "andrea@mail.com", List.of("ACC1"));
 
@@ -80,7 +80,7 @@ class UserControllerTest {
     // GET /users - SUCCESS
     // ============================
     @Test
-    void getAllUser_success() throws Exception {
+    void getAllUser_shouldReturn200WithList() throws Exception {
         User u1 = user(1L, "Francesco", "fra@mail.com","1234");
         User u2 = user(2L, "Giovanni", "gio@mail.com","1234");
 
