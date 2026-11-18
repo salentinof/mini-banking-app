@@ -78,6 +78,7 @@ class TransactionServiceTest {
         assertSame(acc, tx.getAccount());
         assertNotNull(tx.getTimestamp());
         assertNull(tx.getToAccountId());
+        assertEquals(eur(150), tx.getBalanceAfter());
         verify(transactionRepo).save(tx);
     }
 
@@ -105,6 +106,7 @@ class TransactionServiceTest {
 
         assertEquals(eur(70), acc.getBalance());
         assertEquals(TransactionType.WITHDRAW, tx.getType());
+        assertEquals(eur(70), tx.getBalanceAfter());
         assertSame(acc, tx.getAccount());
         assertNotNull(tx.getTimestamp());
         verify(transactionRepo).save(tx);
@@ -161,6 +163,7 @@ class TransactionServiceTest {
         assertEquals(TransactionType.TRANSFER, tx.getType());
         assertSame(from, tx.getAccount());
         assertEquals("A2", tx.getToAccountId());
+        assertEquals(eur(60), tx.getBalanceAfter());
         assertNotNull(tx.getTimestamp());
         verify(transactionRepo).save(tx);
     }

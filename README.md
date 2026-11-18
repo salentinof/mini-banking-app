@@ -95,7 +95,7 @@ All errors share the same JSON shape:
 | Status | When |
 |---|---|
 | 400 | Validation errors, malformed JSON, insufficient funds, transfer to the same account |
-| 401 | Wrong credentials or invalid token |
+| 401 | Wrong credentials, missing or invalid token |
 | 404 | User, account or endpoint not found |
 | 409 | Email already registered |
 
@@ -103,6 +103,7 @@ All errors share the same JSON shape:
 
 - **One endpoint and one DTO per operation.** Each request carries only the fields it needs, so validation is plain `@Valid` with no conditional rules. Internally every operation is stored in the same `transactions` table.
 - **`BigDecimal` for money**, never `double`, to avoid rounding errors.
+- **Balance snapshot on every transaction.** Each transaction stores `balanceAfter`, the account balance right after the operation, like a bank statement line.
 - **`@Transactional` service layer.** A transfer debits one account and credits the other in a single transaction: if anything fails, nothing is saved.
 - **Stateless JWT authentication.** No server-side session; passwords are stored as BCrypt hashes.
 - **Centralized error handling** with a `@RestControllerAdvice`, so clients never see stack traces.
@@ -123,7 +124,6 @@ exception/   Custom exceptions and global handler
 ## Roadmap
 
 - Restrict account operations to the account owner
-- Record the balance after each transaction
 - Transaction history endpoint with pagination
 - PostgreSQL with Docker Compose and Flyway migrations
 - Optimistic locking on account balances

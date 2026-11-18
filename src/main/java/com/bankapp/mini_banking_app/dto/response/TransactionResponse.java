@@ -9,5 +9,6 @@ public record TransactionResponse(
         BigDecimal amount,
         LocalDateTime timestamp,
         String fromAccountId,
-        String toAccountId
+        String toAccountId,
+        BigDecimal balanceAfter
 ) {}

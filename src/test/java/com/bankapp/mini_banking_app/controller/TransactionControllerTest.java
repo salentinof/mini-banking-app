@@ -340,7 +340,8 @@ class TransactionControllerTest {
                 tx.getAmount(),
                 tx.getTimestamp(),
                 tx.getAccount().getAccountNumber(),
-                tx.getToAccountId()
+                tx.getToAccountId(),
+                tx.getBalanceAfter()
         );
     }
 }

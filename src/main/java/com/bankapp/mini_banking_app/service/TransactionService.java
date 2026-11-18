@@ -39,6 +39,7 @@ public class TransactionService {
         log.info("Deposit completed, account={}, newBalance={}",
                 account.getAccountNumber(), account.getBalance());
         tx.setAccount(account);
+        tx.setBalanceAfter(account.getBalance());
 
         tx.setTimestamp(LocalDateTime.now());
         return transactionRepo.save(tx);
@@ -55,6 +56,7 @@ public class TransactionService {
         withdraw(account, request.amount());
         log.info("Withdraw completed, account={}, newBalance={}", account.getAccountNumber(), account.getBalance());
         tx.setAccount(account);
+        tx.setBalanceAfter(account.getBalance());
 
         tx.setTimestamp(LocalDateTime.now());
         return transactionRepo.save(tx);
@@ -111,6 +113,7 @@ public class TransactionService {
         to.setBalance(to.getBalance().add(request.amount()));
         tx.setAccount(from);
         tx.setToAccountId(to.getAccountNumber());
+        tx.setBalanceAfter(from.getBalance());
     }
 
     private Account findAccount(String accountNumber) {
