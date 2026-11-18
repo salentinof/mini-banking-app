@@ -4,6 +4,7 @@ import com.bankapp.mini_banking_app.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -11,6 +12,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -51,14 +53,6 @@ public class GlobalExceptionHandler {
                 .body(build(HttpStatus.NOT_FOUND, ex.getMessage(), request));
     }
 
-    @ExceptionHandler(InvalidTransactionException.class)
-    public ResponseEntity<ErrorResponse> handleTransaction(InvalidTransactionException ex, HttpServletRequest request) {
-        log.warn("Invalid transaction: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(build(HttpStatus.BAD_REQUEST, ex.getMessage(), request));
-    }
-
     @ExceptionHandler(SameAccountTransferException.class)
     public ResponseEntity<ErrorResponse> handleSameAccount(SameAccountTransferException ex, HttpServletRequest request) {
         log.warn("Same account transfer: {}", ex.getMessage());
@@ -83,7 +77,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(build(HttpStatus.BAD_REQUEST,
-                        "Invalid transaction type",
+                        "Malformed JSON request",
                         request));
     }
 
@@ -104,6 +98,17 @@ public class GlobalExceptionHandler {
                 .body(build(HttpStatus.BAD_REQUEST, msg, request));
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(build(HttpStatus.CONFLICT, "Resource already exists", request));
+    }
 
-
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NoResourceFoundException ex, HttpServletRequest request) {
+        log.warn("Endpoint not found: {} {}", request.getMethod(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(build(HttpStatus.NOT_FOUND, "Endpoint not found", request));
+    }
 }

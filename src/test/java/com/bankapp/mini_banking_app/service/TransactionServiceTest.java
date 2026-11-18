@@ -1,6 +1,8 @@
 package com.bankapp.mini_banking_app.service;
 
-import com.bankapp.mini_banking_app.dto.request.TransactionRequest;
+import com.bankapp.mini_banking_app.dto.request.DepositRequest;
+import com.bankapp.mini_banking_app.dto.request.TransferRequest;
+import com.bankapp.mini_banking_app.dto.request.WithdrawRequest;
 import com.bankapp.mini_banking_app.entity.Account;
 import com.bankapp.mini_banking_app.entity.Transaction;
 import com.bankapp.mini_banking_app.entity.TransactionType;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -33,7 +36,7 @@ class TransactionServiceTest {
     private TransactionService service;
 
     // ---------------------------------------------------------
-    // Helper methods
+    // Helpers
     // ---------------------------------------------------------
 
     private Account account(String number, int balance) {
@@ -43,113 +46,157 @@ class TransactionServiceTest {
         return acc;
     }
 
-    private TransactionRequest req(TransactionType type, String from, String to, int amount) {
-        TransactionRequest r = new TransactionRequest();
-        r.setType(type);
-        r.setFromAccount(from);
-        r.setToAccount(to);
-        r.setAccountNumber(from);
-        r.setAmount(BigDecimal.valueOf(amount));
-        return r;
+    private BigDecimal eur(int amount) {
+        return BigDecimal.valueOf(amount);
+    }
+
+    private void givenAccounts(Account... accounts) {
+        for (Account acc : accounts) {
+            when(accountRepo.findByAccountNumber(acc.getAccountNumber())).thenReturn(Optional.of(acc));
+        }
+    }
+
+    private void givenSaveReturnsArgument() {
+        when(transactionRepo.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
     }
 
     // ---------------------------------------------------------
     // DEPOSIT
     // ---------------------------------------------------------
+
     @Test
-    void execute_shouldDepositMoney() {
-        TransactionRequest request = req(TransactionType.DEPOSIT, "A1", null, 100);
-
+    void deposit_shouldAddAmountAndSaveTransaction() {
         Account acc = account("A1", 50);
+        givenAccounts(acc);
+        givenSaveReturnsArgument();
 
-        when(accountRepo.findByAccountNumber("A1")).thenReturn(Optional.of(acc));
-        when(transactionRepo.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        Transaction tx = service.deposit(new DepositRequest("A1", eur(100)));
 
-        Transaction tx = service.execute(request);
-
-        assertEquals(BigDecimal.valueOf(150), acc.getBalance());
+        assertEquals(eur(150), acc.getBalance());
         assertEquals(TransactionType.DEPOSIT, tx.getType());
+        assertEquals(eur(100), tx.getAmount());
+        assertSame(acc, tx.getAccount());
+        assertNotNull(tx.getTimestamp());
+        assertNull(tx.getToAccountId());
+        verify(transactionRepo).save(tx);
+    }
+
+    @Test
+    void deposit_shouldThrow_whenAccountNotFound() {
+        when(accountRepo.findByAccountNumber("X")).thenReturn(Optional.empty());
+
+        assertThrows(AccountNotFoundException.class,
+                () -> service.deposit(new DepositRequest("X", eur(10))));
+
+        verify(transactionRepo, never()).save(any());
     }
 
     // ---------------------------------------------------------
     // WITHDRAW
     // ---------------------------------------------------------
+
     @Test
-    void execute_shouldWithdrawMoney() {
-        TransactionRequest request = req(TransactionType.WITHDRAW, "A1", null, 30);
-
+    void withdraw_shouldSubtractAmountAndSaveTransaction() {
         Account acc = account("A1", 100);
+        givenAccounts(acc);
+        givenSaveReturnsArgument();
 
-        when(accountRepo.findByAccountNumber("A1")).thenReturn(Optional.of(acc));
-        when(transactionRepo.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        Transaction tx = service.withdraw(new WithdrawRequest("A1", eur(30)));
 
-        Transaction tx = service.execute(request);
-
-        assertEquals(BigDecimal.valueOf(70), acc.getBalance());
+        assertEquals(eur(70), acc.getBalance());
         assertEquals(TransactionType.WITHDRAW, tx.getType());
+        assertSame(acc, tx.getAccount());
+        assertNotNull(tx.getTimestamp());
+        verify(transactionRepo).save(tx);
     }
 
     @Test
-    void execute_shouldThrow_whenWithdrawInsufficientFunds() {
-        TransactionRequest request = req(TransactionType.WITHDRAW, "A1", null, 200);
-
+    void withdraw_shouldAllowWithdrawingEntireBalance() {
         Account acc = account("A1", 50);
+        givenAccounts(acc);
+        givenSaveReturnsArgument();
 
-        when(accountRepo.findByAccountNumber("A1")).thenReturn(Optional.of(acc));
+        service.withdraw(new WithdrawRequest("A1", eur(50)));
 
-        assertThrows(InsufficientFundsException.class, () -> service.execute(request));
+        assertEquals(0, acc.getBalance().compareTo(BigDecimal.ZERO));
+    }
+
+    @Test
+    void withdraw_shouldThrow_whenInsufficientFunds() {
+        Account acc = account("A1", 50);
+        givenAccounts(acc);
+
+        assertThrows(InsufficientFundsException.class,
+                () -> service.withdraw(new WithdrawRequest("A1", eur(200))));
+
+        assertEquals(eur(50), acc.getBalance());
+        verify(transactionRepo, never()).save(any());
+    }
+
+    @Test
+    void withdraw_shouldThrow_whenAccountNotFound() {
+        when(accountRepo.findByAccountNumber("X")).thenReturn(Optional.empty());
+
+        assertThrows(AccountNotFoundException.class,
+                () -> service.withdraw(new WithdrawRequest("X", eur(10))));
+
+        verify(transactionRepo, never()).save(any());
     }
 
     // ---------------------------------------------------------
     // TRANSFER
     // ---------------------------------------------------------
-    @Test
-    void execute_shouldTransferMoney() {
-        TransactionRequest request = req(TransactionType.TRANSFER, "A1", "A2", 40);
 
+    @Test
+    void transfer_shouldMoveMoneyAndRecordDestination() {
         Account from = account("A1", 100);
         Account to = account("A2", 10);
+        givenAccounts(from, to);
+        givenSaveReturnsArgument();
 
-        when(accountRepo.findByAccountNumber("A1")).thenReturn(Optional.of(from));
-        when(accountRepo.findByAccountNumber("A2")).thenReturn(Optional.of(to));
-        when(transactionRepo.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
+        Transaction tx = service.transfer(new TransferRequest("A1", "A2", eur(40)));
 
-        Transaction tx = service.execute(request);
-
-        assertEquals(BigDecimal.valueOf(60), from.getBalance());
-        assertEquals(BigDecimal.valueOf(50), to.getBalance());
+        assertEquals(eur(60), from.getBalance());
+        assertEquals(eur(50), to.getBalance());
         assertEquals(TransactionType.TRANSFER, tx.getType());
+        assertSame(from, tx.getAccount());
+        assertEquals("A2", tx.getToAccountId());
+        assertNotNull(tx.getTimestamp());
+        verify(transactionRepo).save(tx);
     }
 
     @Test
-    void execute_shouldThrow_whenTransferInsufficientFunds() {
-        TransactionRequest request = req(TransactionType.TRANSFER, "A1", "A2", 200);
-
+    void transfer_shouldThrow_whenInsufficientFunds() {
         Account from = account("A1", 50);
         Account to = account("A2", 10);
+        givenAccounts(from, to);
 
-        when(accountRepo.findByAccountNumber("A1")).thenReturn(Optional.of(from));
-        when(accountRepo.findByAccountNumber("A2")).thenReturn(Optional.of(to));
+        assertThrows(InsufficientFundsException.class,
+                () -> service.transfer(new TransferRequest("A1", "A2", eur(200))));
 
-        assertThrows(InsufficientFundsException.class, () -> service.execute(request));
+        assertEquals(eur(50), from.getBalance());
+        assertEquals(eur(10), to.getBalance());
+        verify(transactionRepo, never()).save(any());
     }
 
     @Test
-    void execute_shouldThrow_whenTransferSameAccount() {
-        TransactionRequest request = req(TransactionType.TRANSFER, "A1", "A1", 10);
+    void transfer_shouldThrow_whenSameAccount() {
+        assertThrows(SameAccountTransferException.class,
+                () -> service.transfer(new TransferRequest("A1", "A1", eur(10))));
 
-        assertThrows(SameAccountTransferException.class, () -> service.execute(request));
+        verifyNoInteractions(accountRepo, transactionRepo);
     }
 
-    // ---------------------------------------------------------
-    // ACCOUNT NOT FOUND
-    // ---------------------------------------------------------
     @Test
-    void execute_shouldThrow_whenAccountNotFound() {
-        TransactionRequest request = req(TransactionType.DEPOSIT, "X", null, 10);
-
+    void transfer_shouldThrow_whenDestinationNotFound() {
+        Account from = account("A1", 100);
+        givenAccounts(from);
         when(accountRepo.findByAccountNumber("X")).thenReturn(Optional.empty());
 
-        assertThrows(AccountNotFoundException.class, () -> service.execute(request));
+        assertThrows(AccountNotFoundException.class,
+                () -> service.transfer(new TransferRequest("A1", "X", eur(10))));
+
+        assertEquals(eur(100), from.getBalance());
+        verify(transactionRepo, never()).save(any());
     }
 }

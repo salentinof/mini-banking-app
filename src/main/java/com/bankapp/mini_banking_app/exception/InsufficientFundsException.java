@@ -6,7 +6,7 @@ public class InsufficientFundsException extends RuntimeException {
 
     public InsufficientFundsException(String accountNumber, BigDecimal balance, BigDecimal requestAmount) {
 
-        super("Insufficent funds | account = %s | balance = %s | request = %s"
+        super("Insufficient funds | account = %s | balance = %s | request = %s"
                 .formatted(accountNumber, balance, requestAmount));
     }
 }

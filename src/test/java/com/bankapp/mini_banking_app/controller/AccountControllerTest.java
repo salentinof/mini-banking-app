@@ -43,7 +43,7 @@ class AccountControllerTest {
     // CREATE ACCOUNT - SUCCESS
     // ============================
     @Test
-    void createAccount_success() throws Exception {
+    void createAccount_shouldReturn201_whenRequestIsValid() throws Exception {
         Account acc = buildAccount(1L, "ACC123", new BigDecimal("100.00"), "EUR", 10L);
         AccountResponse resp = buildResponse(acc);
 
@@ -69,7 +69,7 @@ class AccountControllerTest {
     // GET ACCOUNT - SUCCESS
     // ============================
     @Test
-    void getAccount_success() throws Exception {
+    void getAccount_shouldReturn200_whenAccountExists() throws Exception {
         Account acc = buildAccount(1L, "ACC999", new BigDecimal("500.00"), "EUR", 20L);
         AccountResponse resp = buildResponse(acc);
 
@@ -89,7 +89,7 @@ class AccountControllerTest {
     // GET ACCOUNT - NOT FOUND
     // ============================
     @Test
-    void getAccount_notFound() throws Exception {
+    void getAccount_shouldReturn404_whenAccountNotFound() throws Exception {
         when(accountService.getAccount(anyString()))
                 .thenThrow(new AccountNotFoundException("ACC404"));
 
@@ -103,7 +103,7 @@ class AccountControllerTest {
     // GET ALL ACCOUNTS - SUCCESS
     // ============================
     @Test
-    void getAllAccounts_success() throws Exception {
+    void getAllAccounts_shouldReturn200WithList() throws Exception {
         Account a1 = buildAccount(1L, "ACC1", new BigDecimal("100.00"), "EUR", 10L);
         Account a2 = buildAccount(2L, "ACC2", new BigDecimal("200.00"), "EUR", 20L);
 
