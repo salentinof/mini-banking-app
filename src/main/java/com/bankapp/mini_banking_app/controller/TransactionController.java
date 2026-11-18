@@ -1,7 +1,6 @@
 package com.bankapp.mini_banking_app.controller;
 
 import com.bankapp.mini_banking_app.dto.request.DepositRequest;
-import com.bankapp.mini_banking_app.dto.request.TransactionRequest;
 import com.bankapp.mini_banking_app.dto.request.TransferRequest;
 import com.bankapp.mini_banking_app.dto.request.WithdrawRequest;
 import com.bankapp.mini_banking_app.dto.response.TransactionResponse;

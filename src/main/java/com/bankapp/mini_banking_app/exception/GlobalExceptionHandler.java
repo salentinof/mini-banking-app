@@ -53,14 +53,6 @@ public class GlobalExceptionHandler {
                 .body(build(HttpStatus.NOT_FOUND, ex.getMessage(), request));
     }
 
-    @ExceptionHandler(InvalidTransactionException.class)
-    public ResponseEntity<ErrorResponse> handleTransaction(InvalidTransactionException ex, HttpServletRequest request) {
-        log.warn("Invalid transaction: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(build(HttpStatus.BAD_REQUEST, ex.getMessage(), request));
-    }
-
     @ExceptionHandler(SameAccountTransferException.class)
     public ResponseEntity<ErrorResponse> handleSameAccount(SameAccountTransferException ex, HttpServletRequest request) {
         log.warn("Same account transfer: {}", ex.getMessage());
