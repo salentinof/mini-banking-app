@@ -29,6 +29,9 @@ Account {
 
     private String currency = "EUR";
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

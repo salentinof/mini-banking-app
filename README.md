@@ -17,26 +17,19 @@ A REST API for a simple bank: users register, log in with JWT, open accounts and
 
 ## Run locally
 
-Requirements: Java 21. Maven is not needed, the project ships with the Maven Wrapper.
+Requires Java 21 (Maven Wrapper included).
 
 ```bash
 ./mvnw spring-boot:run        # Windows: mvnw.cmd spring-boot:run
+./mvnw test                   # run the tests
 ```
 
-The API starts on `http://localhost:8080`.
-
-- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- H2 console: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:bankdb`)
-
-Run the tests:
-
-```bash
-./mvnw test
-```
+The API starts on `http://localhost:8080`, Swagger UI at `/swagger-ui/index.html`.
+Set the `JWT_SECRET` environment variable (32+ characters) outside local development.
 
 ## Authentication flow
 
-Registration and login are public; every other endpoint needs a JWT in the `Authorization` header.
+Registration and login are public; every other endpoint needs a JWT in the `Authorization` header. Tokens are valid for 1 hour.
 
 ```bash
 # 1. Register
@@ -53,8 +46,6 @@ curl -X POST http://localhost:8080/auth/login \
 curl http://localhost:8080/accounts -H "Authorization: Bearer <token>"
 ```
 
-Tokens are valid for 1 hour.
-
 ## API endpoints
 
 | Method | Path | Auth | Description |
@@ -70,34 +61,16 @@ Tokens are valid for 1 hour.
 | POST | `/transactions/withdraw` | JWT | `{ "accountNumber", "amount" }` |
 | POST | `/transactions/transfer` | JWT | `{ "fromAccount", "toAccount", "amount" }` |
 
-Example transfer:
-
-```bash
-curl -X POST http://localhost:8080/transactions/transfer \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{"fromAccount":"ACC-123","toAccount":"ACC-456","amount":20}'
-```
-
 ## Error handling
 
-All errors share the same JSON shape:
-
-```json
-{
-  "timestamp": "2026-11-18T15:17:48",
-  "status": 400,
-  "error": "Insufficient funds | account = ACC-123 | balance = 10.00 | request = 50",
-  "path": "/transactions/withdraw"
-}
-```
+All errors return the same JSON shape: `timestamp`, `status`, `error`, `path`.
 
 | Status | When |
 |---|---|
 | 400 | Validation errors, malformed JSON, insufficient funds, transfer to the same account |
 | 401 | Wrong credentials, missing or invalid token |
 | 404 | User, account or endpoint not found |
-| 409 | Email already registered |
+| 409 | Email already registered, concurrent update on the same account |
 
 ## Design decisions
 
@@ -105,28 +78,15 @@ All errors share the same JSON shape:
 - **`BigDecimal` for money**, never `double`, to avoid rounding errors.
 - **Balance snapshot on every transaction.** Each transaction stores `balanceAfter`, the account balance right after the operation, like a bank statement line.
 - **`@Transactional` service layer.** A transfer debits one account and credits the other in a single transaction: if anything fails, nothing is saved.
+- **Optimistic locking on accounts.** `Account` has a `@Version` field, so two concurrent operations on the same account can't overwrite each other: the second one fails with `409 Conflict` and can be retried. A test fires 10 parallel withdrawals and checks that the balance never goes negative.
 - **Stateless JWT authentication.** No server-side session; passwords are stored as BCrypt hashes.
 - **Centralized error handling** with a `@RestControllerAdvice`, so clients never see stack traces.
-
-## Project structure
-
-```
-config/      Spring Security configuration
-controller/  REST endpoints
-service/     Business logic, JWT handling
-repository/  Spring Data JPA repositories
-entity/      JPA entities (User, Account, Transaction)
-dto/         Request and response models
-mapper/      MapStruct mappers
-exception/   Custom exceptions and global handler
-```
 
 ## Roadmap
 
 - Restrict account operations to the account owner
 - Transaction history endpoint with pagination
 - PostgreSQL with Docker Compose and Flyway migrations
-- Optimistic locking on account balances
 
 ## Author
 
