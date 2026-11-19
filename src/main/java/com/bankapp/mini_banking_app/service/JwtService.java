@@ -14,12 +14,21 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.expiration-ms}")
+    private long expirationMs;
+
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String username) {
-        return Jwts.builder().subject(username).issuedAt(new Date()).expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)).signWith(getSigningKey(), Jwts.SIG.HS256).compact();
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + expirationMs))
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
+                .compact();
     }
 
     public String extractUsername(String token) {
